@@ -1230,17 +1230,18 @@ export function createTask(input: {
   };
 
   // Resolve project config once — used both for planPath auto-computation and
-  // for the task_defaults fallback (explicit task arg → project task_defaults →
-  // schema default via undefined). Sourced from `.ai-factory/config.yaml`.
+  // for the task_defaults fallback. Sourced from `.ai-factory/config.yaml`.
   const project = findProjectById(input.projectId);
   const projectRoot = project?.rootPath ?? process.cwd();
   const cfg = getProjectConfig(projectRoot);
   const td = cfg.task_defaults;
 
   // Resolve task flags: explicit input → project task_defaults → global default.
-  // createTask is the single resolution point: callers (REST, web form, roadmap
-  // import, MCP) pass `undefined` for anything the user did not choose, so the
-  // project's task_defaults are never pre-empted by a materialized default.
+  // createTask is the single resolution point: REST, MCP and roadmap import pass
+  // `undefined` for anything the caller did not choose, so the project's
+  // task_defaults are never pre-empted by a materialized default. The web form
+  // sends concrete values, but seeds them from the same task_defaults via
+  // GET /projects/:id/defaults before submit.
   const env = getEnv();
   const resolvedPlannerMode = input.plannerMode ?? td.plannerMode ?? "fast";
   const resolvedAutoMode = input.autoMode ?? td.autoMode ?? true;

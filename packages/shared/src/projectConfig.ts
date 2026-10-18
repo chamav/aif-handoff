@@ -133,8 +133,8 @@ const DEFAULT_LANGUAGE: AifProjectLanguage = {
 /**
  * Task creation defaults sourced from `.ai-factory/config.yaml` → `task_defaults`.
  * Empty by default: a project overrides only the flags it cares about, and
- * unspecified flags fall through to the schema default (via `undefined`).
- * Resolved in `createTask` as: explicit task arg → `task_defaults` → schema default.
+ * unspecified flags fall through to the global default (via `undefined`).
+ * Resolved in `createTask` as: explicit task arg → `task_defaults` → global default.
  */
 const DEFAULT_TASK_DEFAULTS: AifProjectTaskDefaults = {};
 

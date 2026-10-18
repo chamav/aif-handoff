@@ -716,7 +716,7 @@ The config is editable via the **Global Settings** dialog in the web UI (gear ic
 
 **`task_defaults`** — per-project defaults applied when a task is created without an explicit value for a flag. Resolution order: **explicit task arg → `task_defaults` → global default**. This mirrors the existing task → project → system fallback used for runtime profiles (see [Runtime Profile Defaults](#runtime-profile-defaults)). All fields are optional — a project overrides only the flags it cares about.
 
-`createTask` is the single resolution point, so every creation path benefits: UI, MCP `handoff_create_task`, REST API, auto-queue, and roadmap import all leave omitted flags as `undefined` rather than filling a default the project would then lose to.
+`createTask` is the single resolution point. The REST API, MCP `handoff_create_task` and roadmap import pass omitted flags through as `undefined`, so no caller fills in a default that would hide the project value. The web form sends every flag, but it seeds them from `taskDefaults` in [`GET /projects/:id/defaults`](api.md#get-project-config-defaults) when it opens, so an untouched form submits the values `createTask` would pick. Roadmap import forces `skipReview: true`, plus `plannerMode: full` when the project runs in parallel mode. The GitHub issue sync inserts its tasks with a fixed full-mode profile and does not read `task_defaults`.
 
 | Key                   | Global default                 | Options          | Notes                                                             |
 | --------------------- | ------------------------------ | ---------------- | ----------------------------------------------------------------- |
@@ -778,12 +778,12 @@ The commit lifecycle is surfaced over WebSocket as `task:commit_started`, `task:
 
 ### API Endpoints
 
-| Method | Path                      | Description                                |
-| ------ | ------------------------- | ------------------------------------------ |
-| GET    | `/settings/config/status` | Check if config.yaml exists                |
-| GET    | `/settings/config`        | Read parsed config as JSON                 |
-| PUT    | `/settings/config`        | Write config (accepts JSON, saves as YAML) |
-| GET    | `/projects/:id/defaults`  | Get resolved paths/workflow for a project  |
+| Method | Path                      | Description                                                    |
+| ------ | ------------------------- | -------------------------------------------------------------- |
+| GET    | `/settings/config/status` | Check if config.yaml exists                                    |
+| GET    | `/settings/config`        | Read parsed config as JSON                                     |
+| PUT    | `/settings/config`        | Write config (accepts JSON, saves as YAML)                     |
+| GET    | `/projects/:id/defaults`  | Get resolved paths, workflow and `task_defaults` for a project |
 
 ### How It Works
 
