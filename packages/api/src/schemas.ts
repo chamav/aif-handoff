@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TASK_EVENTS, TASK_STATUSES, getEnv } from "@aif/shared";
+import { MAX_REVIEW_ITERATIONS_BOUNDS, TASK_EVENTS, TASK_STATUSES, getEnv } from "@aif/shared";
 
 export const participantLoginSchema = z.object({
   username: z.string().trim().min(1).max(200),
@@ -74,6 +74,12 @@ const taskAttachmentSchema = z.object({
   /** Relative path in storage/ — present for file-backed attachments */
   path: z.string().max(1000).optional(),
 });
+
+const maxReviewIterationsSchema = z
+  .number()
+  .int()
+  .min(MAX_REVIEW_ITERATIONS_BOUNDS.min)
+  .max(MAX_REVIEW_ITERATIONS_BOUNDS.max);
 
 const projectSettingsSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
@@ -168,7 +174,7 @@ export const createTaskSchema = z.object({
   runPostVerify: z.boolean().default(false),
   autoQa: z.boolean().optional(),
   autoQaCheck: z.boolean().optional(),
-  maxReviewIterations: z.number().int().min(1).max(50).optional(),
+  maxReviewIterations: maxReviewIterationsSchema.optional(),
   paused: z.boolean().default(false),
   runtimeProfileId: z.string().min(1).nullable().optional(),
   modelOverride: z.string().max(200).nullable().optional(),
@@ -195,7 +201,7 @@ export const updateTaskSchema = z.object({
   runPostVerify: z.boolean().optional(),
   autoQa: z.boolean().optional(),
   autoQaCheck: z.boolean().optional(),
-  maxReviewIterations: z.number().int().min(1).max(50).optional(),
+  maxReviewIterations: maxReviewIterationsSchema.optional(),
   plan: z.string().nullable().optional(),
   implementationLog: z.string().nullable().optional(),
   reviewComments: z.string().nullable().optional(),

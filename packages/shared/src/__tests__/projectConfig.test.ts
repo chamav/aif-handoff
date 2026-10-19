@@ -282,4 +282,25 @@ describe("getProjectConfig", () => {
     );
     expect(getProjectConfig(projectRoot).task_defaults.maxReviewIterations).toBe(2);
   });
+
+  // The task API accepts 1..50, so the config must not seed anything outside
+  // it: 0.5 floors to 0 and 51 is over the cap.
+  it.each([0.5, 51])("task_defaults drops out-of-range maxReviewIterations %s", (value) => {
+    writeFileSync(
+      join(projectRoot, ".ai-factory", "config.yaml"),
+      `task_defaults:\n  maxReviewIterations: ${value}\n`,
+    );
+    expect(getProjectConfig(projectRoot).task_defaults.maxReviewIterations).toBeUndefined();
+  });
+
+  it.each([
+    [1, 1],
+    [50.9, 50],
+  ])("task_defaults keeps in-range maxReviewIterations %s as %s", (value, expected) => {
+    writeFileSync(
+      join(projectRoot, ".ai-factory", "config.yaml"),
+      `task_defaults:\n  maxReviewIterations: ${value}\n`,
+    );
+    expect(getProjectConfig(projectRoot).task_defaults.maxReviewIterations).toBe(expected);
+  });
 });

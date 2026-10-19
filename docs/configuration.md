@@ -718,20 +718,20 @@ The config is editable via the **Global Settings** dialog in the web UI (gear ic
 
 `createTask` is the single resolution point. The REST API, MCP `handoff_create_task` and roadmap import pass omitted flags through as `undefined`, so no caller fills in a default that would hide the project value. The web form sends every flag, but it seeds them from `taskDefaults` in [`GET /projects/:id/defaults`](api.md#get-project-config-defaults) when it opens, so an untouched form submits the values `createTask` would pick. Roadmap import forces `skipReview: true`, plus `plannerMode: full` when the project runs in parallel mode. The GitHub issue sync inserts its tasks with a fixed full-mode profile and does not read `task_defaults`.
 
-| Key                   | Global default                 | Options          | Notes                                                             |
-| --------------------- | ------------------------------ | ---------------- | ----------------------------------------------------------------- |
-| `autoMode`            | `true`                         | boolean          | `false` parks the task at `plan_ready` for manager review.        |
-| `plannerMode`         | `fast`                         | `fast`, `full`   | `full` creates a feature branch and an iteratively polished plan. |
-| `skipReview`          | mode-driven (`fast` → `true`)  | boolean          | Bypass the review + security sidecar stage.                       |
-| `useSubagents`        | `AGENT_USE_SUBAGENTS`          | boolean          | Use native agent definitions instead of slash-command fallback.   |
-| `planTests`           | mode-driven (`fast` → `false`) | boolean          | Include test tasks in the generated plan.                         |
-| `maxReviewIterations` | `AGENT_MAX_REVIEW_ITERATIONS`  | positive integer | Cap on automatic review→rework cycles (autoMode only).            |
+| Key                   | Global default                 | Options        | Notes                                                                        |
+| --------------------- | ------------------------------ | -------------- | ---------------------------------------------------------------------------- |
+| `autoMode`            | `true`                         | boolean        | `false` parks the task at `plan_ready` for manager review.                   |
+| `plannerMode`         | `fast`                         | `fast`, `full` | `full` creates a feature branch and an iteratively polished plan.            |
+| `skipReview`          | mode-driven (`fast` → `true`)  | boolean        | Bypass the review + security sidecar stage.                                  |
+| `useSubagents`        | `AGENT_USE_SUBAGENTS`          | boolean        | Use native agent definitions instead of slash-command fallback.              |
+| `planTests`           | mode-driven (`fast` → `false`) | boolean        | Include test tasks in the generated plan.                                    |
+| `maxReviewIterations` | `AGENT_MAX_REVIEW_ITERATIONS`  | integer 1-50   | Cap on automatic review→rework cycles (autoMode only). Fractions round down. |
 
 The mode-driven defaults come from the resolved `plannerMode` — so a project that
 sets only `plannerMode: full` also gets `skipReview: false` and `planTests: true`
 unless it overrides them. `task_defaults` outrank the mode-driven layer.
 
-Invalid values (wrong type, unknown enum, non-positive integer) are normalized to "no override" — the affected flag falls through to the global default rather than failing task creation.
+Invalid values (wrong type, unknown enum, a `maxReviewIterations` outside 1-50 after rounding down) are normalized to "no override" — the affected flag falls through to the global default rather than failing task creation. The 1-50 range is the one `POST /tasks` and `PUT /tasks/:id` accept, so a project default never seeds a value the API rejects.
 
 Example — a SwiftPM iOS project that always wants manager review and cannot run two parallel `swift build`:
 

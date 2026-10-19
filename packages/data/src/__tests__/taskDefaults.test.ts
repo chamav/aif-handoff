@@ -136,6 +136,20 @@ describe("createTask task_defaults fallback", () => {
     expect(task!.planDocs).toBe(true);
   });
 
+  it.each([0.5, 51])(
+    "falls back to the global maxReviewIterations when task_defaults has %s",
+    (value) => {
+      writeTaskDefaults(`task_defaults:\n  maxReviewIterations: ${value}\n`);
+      const task = createTask({
+        projectId: PROJECT_ID,
+        title: "T8",
+        description: "d",
+      });
+      expect(task).toBeDefined();
+      expect(task!.maxReviewIterations).toBe(3); // AGENT_MAX_REVIEW_ITERATIONS
+    },
+  );
+
   it("lets subagent mode from task_defaults disable the improve/verify passes", () => {
     writeTaskDefaults("task_defaults:\n  useSubagents: true\n");
     const task = createTask({

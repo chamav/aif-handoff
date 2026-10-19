@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
+import { MAX_REVIEW_ITERATIONS_BOUNDS } from "./constants.js";
 
 export interface AifProjectPaths {
   plan: string;
@@ -167,6 +168,18 @@ function normalizeLanguage(raw: unknown): AifProjectLanguage {
 }
 
 /**
+ * Floor first, then range-check against the task API bounds: `0.5` floors to
+ * `0` and is rejected instead of seeding a value every create request refuses.
+ */
+function normalizeMaxReviewIterations(raw: unknown): number | undefined {
+  if (typeof raw !== "number" || !Number.isFinite(raw)) return undefined;
+  const floored = Math.floor(raw);
+  return floored >= MAX_REVIEW_ITERATIONS_BOUNDS.min && floored <= MAX_REVIEW_ITERATIONS_BOUNDS.max
+    ? floored
+    : undefined;
+}
+
+/**
  * Validate and normalize the `task_defaults` section. Garbage values fall back
  * to `undefined` (no override) instead of leaking into task creation. Mirrors
  * the lenient-but-strict style of `normalizeLanguage`.
@@ -180,12 +193,7 @@ function normalizeTaskDefaults(raw: unknown): AifProjectTaskDefaults {
     skipReview: typeof obj.skipReview === "boolean" ? obj.skipReview : undefined,
     useSubagents: typeof obj.useSubagents === "boolean" ? obj.useSubagents : undefined,
     planTests: typeof obj.planTests === "boolean" ? obj.planTests : undefined,
-    maxReviewIterations:
-      typeof obj.maxReviewIterations === "number" &&
-      Number.isFinite(obj.maxReviewIterations) &&
-      obj.maxReviewIterations > 0
-        ? Math.floor(obj.maxReviewIterations)
-        : undefined,
+    maxReviewIterations: normalizeMaxReviewIterations(obj.maxReviewIterations),
   };
 }
 
